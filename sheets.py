@@ -5,8 +5,8 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-SPREADSHEET_ID = "1h2gEuLAee9ubKC_gRmI3EcUx88Gl4kxTTKVunqbBfkI"
-SHEET_NAME     = "\u042d\u0444\u0444\u0435\u043a\u0442\u0438\u0432\u043d\u043e\u0441\u0442\u044c"
+SPREADSHEET_ID = ""
+SHEET_NAME     = ""
 CREDS_FILE     = os.path.join(os.path.dirname(__file__), "service_account.json")
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
