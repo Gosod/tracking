@@ -1,129 +1,168 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>Участок покраски</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap');
-    :root {
-      --bg:#0f0f0f; --surface:#1a1a1a; --border:#2a2a2a;
-      --accent:#e8ff47; --text:#e0e0e0; --muted:#666;
-      --danger:#ff4f4f; --ok:#4fff91;
-    }
     * { box-sizing:border-box; margin:0; padding:0; }
-    body { background:var(--bg); color:var(--text); font-family:'IBM Plex Sans',sans-serif; min-height:100vh; }
-    header {
-      background:var(--surface); border-bottom:2px solid var(--accent);
-      padding:18px 24px; display:flex; align-items:center; justify-content:space-between;
-      position:sticky; top:0; z-index:100;
+    body { background:#1a1a1a; font-family:'Inter',sans-serif; color:#e8e8e8; min-height:100vh; }
+    .pm-app { max-width:900px; margin:0 auto; }
+
+    .pm-topbar {
+      background:#111; padding:0 16px; height:48px;
+      display:flex; align-items:center; justify-content:space-between;
+      border-bottom:1px solid #2a2a2a; position:sticky; top:0; z-index:100;
     }
-    header h1 { font-family:'IBM Plex Mono',monospace; font-size:1rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); }
-    .sync-status { font-family:'IBM Plex Mono',monospace; font-size:.7rem; color:var(--muted); }
-    .sync-status.ok { color:var(--ok); }
-    .upload-zone {
-      margin:24px; border:2px dashed var(--border); border-radius:4px;
-      padding:32px 24px; text-align:center; cursor:pointer; position:relative;
-      transition:border-color .2s, background .2s;
+    .pm-logo-area { display:flex; align-items:center; gap:12px; }
+    .pm-logo { height:32px; width:auto; display:block; }
+    .pm-divider { width:1px; height:22px; background:#2a2a2a; }
+    .pm-title { font-size:11px; letter-spacing:.18em; color:#999; text-transform:uppercase; font-weight:500; }
+    .pm-status { font-size:10px; color:#444; letter-spacing:.08em; text-transform:uppercase; }
+    .pm-status.ok { color:#2a7a4a; }
+
+    .pm-upload {
+      margin:16px; border:1px dashed #333; border-radius:2px;
+      padding:30px; text-align:center; background:#141414;
+      position:relative; overflow:hidden; cursor:pointer; transition:border-color .2s;
     }
-    .upload-zone.drag-over { border-color:var(--accent); background:rgba(232,255,71,.04); }
-    .upload-zone input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
-    .upload-icon { font-size:2rem; margin-bottom:8px; display:block; }
-    .upload-zone p { color:var(--muted); font-size:.85rem; }
-    .upload-zone strong { color:var(--text); font-size:.95rem; }
-    .upload-feedback {
-      margin:0 24px; font-family:'IBM Plex Mono',monospace; font-size:.8rem;
-      padding:10px 14px; border-radius:4px; display:none;
+    .pm-upload:hover { border-color:#1d6fc4; }
+    .pm-upload::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:2px;
+      background:linear-gradient(90deg,#1d6fc4 33%,#2580d8 33% 66%,#1d6fc4 66%);
     }
-    .upload-feedback.loading { color:var(--accent); background:rgba(232,255,71,.07); }
-    .upload-feedback.success { color:var(--ok); background:rgba(79,255,145,.07); }
-    .upload-feedback.error   { color:var(--danger); background:rgba(255,79,79,.07); }
-    .section-label { margin:28px 24px 12px; font-family:'IBM Plex Mono',monospace; font-size:.7rem; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); }
-    .orders-list { margin:0 24px 40px; display:flex; flex-direction:column; gap:8px; }
-    .order-card { background:var(--surface); border:1px solid var(--border); border-radius:4px; display:flex; align-items:center; overflow:hidden; }
-    .order-body { flex:1; padding:16px 18px; text-decoration:none; color:inherit; display:block; }
-    .order-number { font-family:'IBM Plex Mono',monospace; font-size:1rem; font-weight:600; margin-bottom:4px; }
-    .order-meta { font-size:.75rem; color:var(--muted); }
-    .btn-delete { background:none; border:none; border-left:1px solid var(--border); color:var(--muted); cursor:pointer; padding:16px 18px; font-size:1rem; transition:color .15s; }
-    .btn-delete:active { color:var(--danger); }
-    .empty-state { text-align:center; padding:48px 24px; color:var(--muted); font-size:.85rem; }
-    #toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(100px); background:var(--surface); border:1px solid var(--border); padding:12px 20px; border-radius:4px; font-family:'IBM Plex Mono',monospace; font-size:.8rem; transition:transform .3s; z-index:999; white-space:nowrap; }
-    #toast.show { transform:translateX(-50%) translateY(0); }
-    #toast.ok  { border-color:var(--ok); color:var(--ok); }
-    #toast.err { border-color:var(--danger); color:var(--danger); }
+    .pm-upload input[type="file"] { display:none; }
+    .upload-folder { width:38px; height:30px; margin:0 auto 12px; position:relative; }
+    .upload-folder::before { content:''; position:absolute; bottom:0; left:0; right:0; height:22px; background:#1d6fc4; border-radius:1px; }
+    .upload-folder::after  { content:''; position:absolute; top:5px; left:0; width:18px; height:8px; background:#2580d8; border-radius:1px 1px 0 0; }
+    .pm-upload-label { font-size:13px; font-weight:600; color:#ddd; margin-bottom:4px; }
+    .pm-upload-sub   { font-size:11px; color:#555; letter-spacing:.03em; }
+
+    .pm-feedback {
+      margin:0 16px 8px; font-size:11px; font-family:'Inter',sans-serif;
+      padding:8px 12px; border-radius:2px; display:none;
+    }
+    .pm-feedback.loading { color:#2580d8; background:rgba(29,111,196,.1); }
+    .pm-feedback.success { color:#2a9a5a; background:rgba(42,154,90,.1); }
+    .pm-feedback.error   { color:#c0392b; background:rgba(192,57,43,.1); }
+
+    .pm-section {
+      padding:8px 20px 6px; font-size:10px; letter-spacing:.2em; color:#444;
+      text-transform:uppercase; display:flex; align-items:center; gap:10px;
+      border-top:1px solid #242424;
+    }
+    .pm-section::after { content:''; flex:1; height:1px; background:#242424; }
+
+    .pm-orders { padding:0 16px 32px; display:flex; flex-direction:column; gap:8px; }
+    .pm-card {
+      background:#111; border:1px solid #2a2a2a; border-radius:2px;
+      display:flex; align-items:stretch; overflow:hidden; transition:border-color .15s;
+    }
+    .pm-card:hover { border-color:#1d6fc4; }
+    .pm-card-accent {
+      width:28px; background:#111; display:flex; flex-direction:column;
+      justify-content:center; align-items:center; gap:3px; padding:8px 0;
+      border-right:1px solid #222;
+    }
+    .pm-card-accent span { display:block; height:3px; background:#1d6fc4; }
+    .pm-card-accent span:nth-child(1) { width:14px; }
+    .pm-card-accent span:nth-child(2) { background:#2580d8; width:10px; }
+    .pm-card-accent span:nth-child(3) { width:12px; }
+    .pm-card-body { flex:1; padding:10px 14px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; text-decoration:none; color:inherit; }
+    .pm-card-id   { font-size:13px; font-weight:600; color:#f0f0f0; }
+    .pm-card-date { font-size:11px; color:#444; margin-top:2px; letter-spacing:.05em; }
+    .pm-badge { font-size:9px; letter-spacing:.15em; text-transform:uppercase; padding:3px 8px; background:#0d2a4a; color:#4a9eff; border:1px solid #1a4a8a; border-radius:1px; }
+    .pm-close { color:#333; font-size:18px; padding:10px 14px; cursor:pointer; line-height:1; border-left:1px solid #222; display:flex; align-items:center; }
+    .pm-close:hover { color:#888; }
+
+    .pm-empty { text-align:center; padding:48px 24px; color:#444; font-size:12px; letter-spacing:.05em; }
   </style>
 </head>
 <body>
-<header>
-  <h1>Участок покраски</h1>
-  <span class="sync-status {% if sheets_ok %}ok{% else %}{% endif %}">
-    {% if sheets_ok %}● Sheets{% else %}○ Sheets не настроен{% endif %}
-  </span>
-</header>
+<div class="pm-app">
 
-<div class="upload-zone" id="dropzone">
-  <input type="file" id="fileInput" accept=".xlsx,.xls,.jpg" multiple>
-  <span class="upload-icon">📂</span>
-  <strong>Загрузить спецификацию + картинки</strong>
-  <p>Выберите Excel-файл и jpg-картинки из одной папки</p>
-</div>
-
-<div class="upload-feedback" id="feedback"></div>
-
-{% if orders %}
-  <div class="section-label">Активные заказы — {{ orders|length }}</div>
-  <div class="orders-list">
-    {% for order in orders %}
-    <div class="order-card">
-      <a href="/order/{{ order.id }}" class="order-body">
-        <div class="order-number">{{ order.order_number }}</div>
-        <div class="order-meta">Загружен: {{ order.created_at[:10] }}</div>
-      </a>
-      <button class="btn-delete" onclick="deleteOrder({{ order.id }}, '{{ order.order_number }}')">✕</button>
+  <div class="pm-topbar">
+    <div class="pm-logo-area">
+      <img class="pm-logo" src="/static/logo.png" alt="Фотомеханика" onerror="this.style.display='none'"/>
+      <div class="pm-divider"></div>
+      <div class="pm-title">Участок покраски</div>
     </div>
-    {% endfor %}
+    <div class="pm-status {% if sheets_ok %}ok{% endif %}">
+      {% if sheets_ok %}Sheets ●{% else %}Sheets не настроен{% endif %}
+    </div>
   </div>
-{% else %}
-  <div class="empty-state">Нет загруженных заказов.<br>Загрузите Excel-файл из 1С выше.</div>
-{% endif %}
 
-<div id="toast"></div>
+  <div class="pm-upload" id="dropzone">
+    <input type="file" id="fileInput" multiple accept=".xlsx,.xls,.jpg,.jpeg,.png,.pdf"/>
+    <div class="upload-folder"></div>
+    <div class="pm-upload-label">Загрузить заказ</div>
+    <div class="pm-upload-sub">Выберите файлы: .xlsx · .jpg / .png · .pdf</div>
+  </div>
+
+  <div class="pm-feedback" id="feedback"></div>
+
+  {% if orders %}
+    <div class="pm-section">Активные заказы — {{ orders|length }}</div>
+    <div class="pm-orders">
+      {% for order in orders %}
+      <div class="pm-card">
+        <div class="pm-card-accent"><span></span><span></span><span></span></div>
+        <a href="/order/{{ order.id }}" class="pm-card-body">
+          <div>
+            <div class="pm-card-id">{{ order.order_number }}</div>
+            <div class="pm-card-date">{{ order.created_at[:10] }}</div>
+          </div>
+          <div class="pm-badge">В работе</div>
+        </a>
+        <div class="pm-close" onclick="deleteOrder({{ order.id }}, '{{ order.order_number }}')">×</div>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="pm-empty">Нет активных заказов — загрузите спецификацию</div>
+  {% endif %}
+
+</div>
 <script>
-  const dropzone = document.getElementById('dropzone');
+  const dropzone  = document.getElementById('dropzone');
   const fileInput = document.getElementById('fileInput');
-  const feedback = document.getElementById('feedback');
+  const feedback  = document.getElementById('feedback');
 
-  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
-  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+  dropzone.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.style.borderColor='#1d6fc4'; });
+  dropzone.addEventListener('dragleave', () => dropzone.style.borderColor='');
   dropzone.addEventListener('drop', e => {
-    e.preventDefault(); dropzone.classList.remove('drag-over');
+    e.preventDefault(); dropzone.style.borderColor='';
     if (e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files);
   });
   fileInput.addEventListener('change', () => { if (fileInput.files.length) uploadFiles(fileInput.files); });
 
   function uploadFiles(files) {
-    const excelCount = [...files].filter(f => f.name.match(/\.xlsx?$/i)).length;
-    const imgCount   = [...files].filter(f => f.name.match(/\.jpg$/i)).length;
-    showFeedback('loading', `Загружаем: ${excelCount} файл спеки, ${imgCount} картинок...`);
+    const arr = [...files];
+    const xl  = arr.filter(f => f.name.match(/\.xlsx?$/i)).length;
+    const img = arr.filter(f => f.name.match(/\.(jpg|jpeg|png)$/i)).length;
+    const pdf = arr.filter(f => f.name.match(/\.pdf$/i)).length;
+    showFeedback('loading', `Загружаем: ${xl} спека, ${img} картинок, ${pdf} PDF...`);
 
-    const formData = new FormData();
-    for (const f of files) formData.append('files', f);
+    const fd = new FormData();
+    arr.forEach(f => fd.append('files', f));
 
-    fetch('/upload', { method:'POST', body:formData })
+    fetch('/upload', { method:'POST', body:fd })
       .then(r => r.json())
-      .then(data => {
-        if (data.ok) {
-          showFeedback('success', `✓ Заказ ${data.order_number} (${data.positions_count} позиций, ${data.images_saved} картинок)`);
-          setTimeout(() => location.reload(), 1200);
+      .then(d => {
+        if (d.ok) {
+          showFeedback('success', `✓ ${d.order_number} — ${d.positions_count} поз., ${d.images_saved} фото, ${d.pdfs_saved} PDF`);
+          setTimeout(() => location.reload(), 1400);
         } else {
-          showFeedback('error', `✗ ${data.error}`);
+          showFeedback('error', `✗ ${d.error}`);
         }
       })
       .catch(() => showFeedback('error', '✗ Ошибка сети'));
   }
 
   function showFeedback(type, text) {
-    feedback.className = `upload-feedback ${type}`;
+    feedback.className = `pm-feedback ${type}`;
     feedback.textContent = text;
     feedback.style.display = 'block';
   }
