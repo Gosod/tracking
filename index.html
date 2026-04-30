@@ -3,174 +3,371 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>Участок покраски</title>
+  <title>{{ order.order_number }}</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
   <style>
     * { box-sizing:border-box; margin:0; padding:0; }
-    body { background:#1a1a1a; font-family:'Inter',sans-serif; color:#e8e8e8; min-height:100vh; }
-    .pm-app { max-width:900px; margin:0 auto; }
+    body { background:#1a1a1a; font-family:'Inter',sans-serif; color:#e8e8e8; min-height:100vh; padding-bottom:60px; }
 
-    .pm-topbar {
-      background:#111; padding:0 16px; height:48px;
-      display:flex; align-items:center; justify-content:space-between;
-      border-bottom:1px solid #2a2a2a; position:sticky; top:0; z-index:100;
+    /* ── Шапка ── */
+    header {
+      background:#111; border-bottom:1px solid #2a2a2a;
+      padding:0 16px; height:48px;
+      display:flex; align-items:center; gap:12px;
+      position:sticky; top:0; z-index:100;
     }
-    .pm-logo-area { display:flex; align-items:center; gap:12px; }
-    .pm-logo { height:32px; width:auto; display:block; }
-    .pm-divider { width:1px; height:22px; background:#2a2a2a; }
-    .pm-title { font-size:11px; letter-spacing:.18em; color:#999; text-transform:uppercase; font-weight:500; }
-    .pm-status { font-size:10px; color:#444; letter-spacing:.08em; text-transform:uppercase; }
-    .pm-status.ok { color:#2a7a4a; }
+    .back-btn { color:#4a9eff; text-decoration:none; font-size:18px; padding:4px 6px 4px 0; }
+    header h1 { font-size:12px; font-weight:600; color:#ccc; letter-spacing:.1em; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .hdr-progress-wrap { width:60px; height:3px; background:#2a2a2a; border-radius:2px; overflow:hidden; }
+    .hdr-progress-fill { height:100%; background:#2580d8; border-radius:2px; transition:width .4s; }
+    .hdr-pct { font-size:10px; color:#555; white-space:nowrap; letter-spacing:.06em; min-width:30px; text-align:right; }
 
-    .pm-upload {
-      margin:16px; border:1px dashed #333; border-radius:2px;
-      padding:30px; text-align:center; background:#141414;
-      position:relative; overflow:hidden; cursor:pointer; transition:border-color .2s;
-    }
-    .pm-upload:hover { border-color:#1d6fc4; }
-    .pm-upload::before {
-      content:''; position:absolute; top:0; left:0; right:0; height:2px;
-      background:linear-gradient(90deg,#1d6fc4 33%,#2580d8 33% 66%,#1d6fc4 66%);
-    }
-    .pm-upload input[type="file"] { display:none; }
-    .upload-folder { width:38px; height:30px; margin:0 auto 12px; position:relative; }
-    .upload-folder::before { content:''; position:absolute; bottom:0; left:0; right:0; height:22px; background:#1d6fc4; border-radius:1px; }
-    .upload-folder::after  { content:''; position:absolute; top:5px; left:0; width:18px; height:8px; background:#2580d8; border-radius:1px 1px 0 0; }
-    .pm-upload-label { font-size:13px; font-weight:600; color:#ddd; margin-bottom:4px; }
-    .pm-upload-sub   { font-size:11px; color:#555; letter-spacing:.03em; }
+    /* ── Список ── */
+    .positions { padding:10px 14px; display:flex; flex-direction:column; gap:8px; }
 
-    .pm-feedback {
-      margin:0 16px 8px; font-size:11px; font-family:'Inter',sans-serif;
-      padding:8px 12px; border-radius:2px; display:none;
-    }
-    .pm-feedback.loading { color:#2580d8; background:rgba(29,111,196,.1); }
-    .pm-feedback.success { color:#2a9a5a; background:rgba(42,154,90,.1); }
-    .pm-feedback.error   { color:#c0392b; background:rgba(192,57,43,.1); }
-
-    .pm-section {
-      padding:8px 20px 6px; font-size:10px; letter-spacing:.2em; color:#444;
-      text-transform:uppercase; display:flex; align-items:center; gap:10px;
-      border-top:1px solid #242424;
-    }
-    .pm-section::after { content:''; flex:1; height:1px; background:#242424; }
-
-    .pm-orders { padding:0 16px 32px; display:flex; flex-direction:column; gap:8px; }
-    .pm-card {
+    /* ── Карточка ── */
+    .pos-card {
       background:#111; border:1px solid #2a2a2a; border-radius:2px;
-      display:flex; align-items:stretch; overflow:hidden; transition:border-color .15s;
+      overflow:hidden; transition:border-color .2s;
     }
-    .pm-card:hover { border-color:#1d6fc4; }
-    .pm-card-accent {
-      width:28px; background:#111; display:flex; flex-direction:column;
-      justify-content:center; align-items:center; gap:3px; padding:8px 0;
-      border-right:1px solid #222;
-    }
-    .pm-card-accent span { display:block; height:3px; background:#1d6fc4; }
-    .pm-card-accent span:nth-child(1) { width:14px; }
-    .pm-card-accent span:nth-child(2) { background:#2580d8; width:10px; }
-    .pm-card-accent span:nth-child(3) { width:12px; }
-    .pm-card-body { flex:1; padding:10px 14px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; text-decoration:none; color:inherit; }
-    .pm-card-id   { font-size:13px; font-weight:600; color:#f0f0f0; }
-    .pm-card-date { font-size:11px; color:#444; margin-top:2px; letter-spacing:.05em; }
-    .pm-badge { font-size:9px; letter-spacing:.15em; text-transform:uppercase; padding:3px 8px; background:#0d2a4a; color:#4a9eff; border:1px solid #1a4a8a; border-radius:1px; }
-    .pm-close { color:#333; font-size:18px; padding:10px 14px; cursor:pointer; line-height:1; border-left:1px solid #222; display:flex; align-items:center; }
-    .pm-close:hover { color:#888; }
+    .pos-card.done { border-color:#1a4a2a; opacity:.65; }
+    .pos-card.done .pos-name { text-decoration:line-through; color:#555; }
 
-    .pm-empty { text-align:center; padding:48px 24px; color:#444; font-size:12px; letter-spacing:.05em; }
+    .pos-top { display:flex; }
+
+    /* Картинка / заглушка */
+    .pos-thumb {
+      width:100px; min-width:100px; height:100px;
+      background:#161616; border-right:1px solid #222;
+      display:flex; align-items:center; justify-content:center;
+      overflow:hidden; flex-shrink:0; position:relative;
+    }
+    .pos-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+    .pos-thumb .no-img { color:#333; font-size:10px; text-align:center; line-height:1.6; letter-spacing:.04em; }
+    /* Иконка PDF поверх картинки */
+    .pos-thumb .pdf-badge {
+      position:absolute; bottom:4px; right:4px;
+      background:#c0392b; color:#fff; font-size:8px;
+      font-weight:600; letter-spacing:.06em;
+      padding:2px 5px; border-radius:1px;
+      pointer-events:none;
+    }
+    .pos-thumb.has-pdf { cursor:pointer; }
+    .pos-thumb.has-pdf::after {
+      content:''; position:absolute; inset:0;
+      background:rgba(29,111,196,0); transition:background .15s;
+    }
+    .pos-thumb.has-pdf:active::after { background:rgba(29,111,196,.2); }
+
+    /* Инфо */
+    .pos-body { flex:1; padding:10px 12px 8px; min-width:0; display:flex; flex-direction:column; justify-content:space-between; }
+    .pos-header { display:flex; align-items:flex-start; gap:6px; margin-bottom:4px; }
+    .pos-num { font-size:9px; color:#555; background:#1e1e1e; padding:2px 5px; border-radius:1px; white-space:nowrap; margin-top:2px; flex-shrink:0; }
+    .pos-name { font-size:13px; font-weight:600; line-height:1.3; }
+    .pos-desig { font-size:10px; color:#444; margin-bottom:8px; word-break:break-all; letter-spacing:.02em; }
+
+    .pos-progress { display:flex; align-items:center; gap:8px; }
+    .pos-progress-bar { flex:1; height:2px; background:#222; border-radius:1px; overflow:hidden; }
+    .pos-progress-fill { height:100%; background:#1d6fc4; border-radius:1px; transition:width .4s; }
+    .pos-card.done .pos-progress-fill { background:#2a7a4a; }
+    .pos-qty-label { font-size:10px; color:#555; white-space:nowrap; }
+
+    /* Кнопки */
+    .pos-actions { display:flex; border-top:1px solid #1e1e1e; }
+    .btn-mark {
+      flex:1; background:none; border:none; color:#ccc;
+      font-family:'Inter',sans-serif; font-size:12px; font-weight:600;
+      padding:12px; cursor:pointer; transition:background .15s,color .15s;
+      display:flex; align-items:center; justify-content:center; gap:5px;
+    }
+    .btn-mark:active { background:#0d2a4a; color:#4a9eff; }
+    .btn-mark.primary { border-right:1px solid #1e1e1e; }
+    .btn-mark.done-btn { color:#2a7a4a; }
+    .btn-n {
+      background:none; border:none; border-left:1px solid #1e1e1e;
+      color:#444; font-size:11px; padding:12px 16px; cursor:pointer;
+      font-family:'Inter',sans-serif; letter-spacing:.05em;
+    }
+    .btn-n:active { color:#4a9eff; background:#0d2a4a; }
+
+    /* ── Модалка кол-ва ── */
+    .modal-overlay {
+      position:fixed; inset:0; background:rgba(0,0,0,.85);
+      z-index:200; display:none; align-items:flex-end; justify-content:center;
+    }
+    .modal-overlay.open { display:flex; }
+    .modal {
+      background:#111; border:1px solid #2a2a2a; border-top:2px solid #1d6fc4;
+      border-radius:4px 4px 0 0; padding:22px; width:100%; max-width:480px;
+    }
+    .modal-label { font-size:10px; color:#444; text-transform:uppercase; letter-spacing:.15em; margin-bottom:4px; }
+    .modal-name  { font-size:14px; font-weight:600; margin-bottom:20px; line-height:1.3; }
+    .qty-row { display:flex; align-items:center; gap:10px; margin-bottom:20px; }
+    .qty-btn {
+      width:56px; height:56px; background:#1e1e1e; border:1px solid #2a2a2a;
+      border-radius:2px; color:#e8e8e8; font-size:22px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+      user-select:none; -webkit-user-select:none;
+    }
+    .qty-btn:active { background:#0d2a4a; color:#4a9eff; }
+    /* Поле ввода — по тапу появляется клавиатура */
+    .qty-input {
+      flex:1; text-align:center; font-family:'Inter',sans-serif;
+      font-size:36px; font-weight:600; color:#4a9eff;
+      background:transparent; border:none; outline:none;
+      -moz-appearance:textfield;
+    }
+    .qty-input::-webkit-outer-spin-button,
+    .qty-input::-webkit-inner-spin-button { -webkit-appearance:none; }
+    .modal-btns { display:flex; gap:10px; }
+    .btn-cancel  { flex:1; background:#1e1e1e; border:1px solid #2a2a2a; border-radius:2px; color:#666; font-size:13px; padding:14px; cursor:pointer; }
+    .btn-confirm { flex:2; background:#1d6fc4; border:none; border-radius:2px; color:#fff; font-size:13px; font-weight:600; padding:14px; cursor:pointer; letter-spacing:.06em; }
+    .btn-confirm:active { background:#2580d8; }
+
+    /* ── PDF viewer overlay ── */
+    .pdf-overlay {
+      position:fixed; inset:0; background:rgba(0,0,0,.95);
+      z-index:300; display:none; flex-direction:column;
+    }
+    .pdf-overlay.open { display:flex; }
+    .pdf-toolbar {
+      background:#111; border-bottom:1px solid #2a2a2a;
+      padding:0 16px; height:44px;
+      display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
+    }
+    .pdf-toolbar span { font-size:11px; color:#666; letter-spacing:.06em; }
+    .pdf-close-btn {
+      background:none; border:none; color:#888; font-size:20px; cursor:pointer; padding:4px 8px;
+    }
+    .pdf-close-btn:active { color:#fff; }
+    .pdf-frame { flex:1; width:100%; border:none; }
+
+    /* ── Тост ── */
+    #toast {
+      position:fixed; bottom:20px; left:50%;
+      transform:translateX(-50%) translateY(80px);
+      background:#111; border:1px solid #2a2a2a; padding:10px 18px;
+      border-radius:2px; font-size:11px; letter-spacing:.04em;
+      transition:transform .25s; z-index:400; white-space:nowrap;
+    }
+    #toast.show { transform:translateX(-50%) translateY(0); }
+    #toast.ok  { border-color:#1a4a2a; color:#2a9a5a; }
+    #toast.err { border-color:#4a1a1a; color:#c0392b; }
   </style>
 </head>
 <body>
-<div class="pm-app">
 
-  <div class="pm-topbar">
-    <div class="pm-logo-area">
-      <img class="pm-logo" src="/static/logo.png" alt="Фотомеханика" onerror="this.style.display='none'"/>
-      <div class="pm-divider"></div>
-      <div class="pm-title">Участок покраски</div>
-    </div>
-    <div class="pm-status {% if sheets_ok %}ok{% endif %}">
-      {% if sheets_ok %}Sheets ●{% else %}Sheets не настроен{% endif %}
-    </div>
+<header>
+  <a href="/" class="back-btn">←</a>
+  <h1>{{ order.order_number }}</h1>
+  <div class="hdr-progress-wrap">
+    <div class="hdr-progress-fill" id="globalBar" style="width:0%"></div>
   </div>
+  <span class="hdr-pct" id="globalPct">0%</span>
+</header>
 
-  <div class="pm-upload" id="dropzone">
-    <input type="file" id="fileInput" multiple accept=".xlsx,.xls,.jpg,.jpeg,.png,.pdf"/>
-    <div class="upload-folder"></div>
-    <div class="pm-upload-label">Загрузить заказ</div>
-    <div class="pm-upload-sub">Выберите файлы: .xlsx · .jpg / .png · .pdf</div>
-  </div>
+<div class="positions">
+  {% for pos in positions %}
+  <div class="pos-card {% if pos.complete %}done{% endif %}"
+       id="card-{{ pos.id }}"
+       data-qty="{{ pos.qty }}"
+       data-done="{{ pos.done }}">
 
-  <div class="pm-feedback" id="feedback"></div>
+    <div class="pos-top">
 
-  {% if orders %}
-    <div class="pm-section">Активные заказы — {{ orders|length }}</div>
-    <div class="pm-orders">
-      {% for order in orders %}
-      <div class="pm-card">
-        <div class="pm-card-accent"><span></span><span></span><span></span></div>
-        <a href="/order/{{ order.id }}" class="pm-card-body">
-          <div>
-            <div class="pm-card-id">{{ order.order_number }}</div>
-            <div class="pm-card-date">{{ order.created_at[:10] }}</div>
-          </div>
-          <div class="pm-badge">В работе</div>
-        </a>
-        <div class="pm-close" onclick="deleteOrder({{ order.id }}, '{{ order.order_number }}')">×</div>
+      <!-- Картинка / PDF-тригер -->
+      <div class="pos-thumb {% if pos.pdf_url %}has-pdf{% endif %}"
+           {% if pos.pdf_url %}onclick="openPdf('{{ pos.pdf_url }}', '{{ pos.designation }}')"{% endif %}>
+        {% if pos.image_url %}
+          <img src="{{ pos.image_url }}" alt="{{ pos.designation }}" loading="lazy"/>
+        {% else %}
+          <div class="no-img">нет<br>фото</div>
+        {% endif %}
+        {% if pos.pdf_url %}
+          <div class="pdf-badge">PDF</div>
+        {% endif %}
       </div>
-      {% endfor %}
+
+      <!-- Инфо -->
+      <div class="pos-body">
+        <div>
+          <div class="pos-header">
+            <span class="pos-num">{{ pos.pos_number or '—' }}</span>
+            <span class="pos-name">{{ pos.name }}</span>
+          </div>
+          <div class="pos-desig">{{ pos.designation }}</div>
+        </div>
+        <div class="pos-progress">
+          <div class="pos-progress-bar">
+            <div class="pos-progress-fill" id="fill-{{ pos.id }}"
+                 style="width:{% if pos.qty > 0 %}{{ [pos.done / pos.qty * 100, 100]|min|int }}{% else %}0{% endif %}%">
+            </div>
+          </div>
+          <span class="pos-qty-label" id="label-{{ pos.id }}">
+            {{ pos.done|int }}/{{ pos.qty|int }} шт
+          </span>
+        </div>
+      </div>
     </div>
-  {% else %}
-    <div class="pm-empty">Нет активных заказов — загрузите спецификацию</div>
-  {% endif %}
 
+    <!-- Кнопки -->
+    <div class="pos-actions">
+      {% if pos.complete %}
+        <button class="btn-mark done-btn" disabled>✓ Готово</button>
+      {% else %}
+        <button class="btn-mark primary" onclick="markOne({{ pos.id }})">+ 1</button>
+        <button class="btn-n" onclick="openModal({{ pos.id }}, '{{ pos.name }}', {{ pos.qty }}, {{ pos.done }})">N шт</button>
+      {% endif %}
+    </div>
+
+  </div>
+  {% endfor %}
 </div>
+
+<!-- Модалка -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-label">Отметить готовыми</div>
+    <div class="modal-name" id="modalName"></div>
+    <div class="qty-row">
+      <button class="qty-btn" id="btnMinus">−</button>
+      <input class="qty-input" id="qtyInput" type="number" min="1" value="1"/>
+      <button class="qty-btn" id="btnPlus">+</button>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Отмена</button>
+      <button class="btn-confirm" onclick="confirmModal()">ОТМЕТИТЬ</button>
+    </div>
+  </div>
+</div>
+
+<!-- PDF viewer -->
+<div class="pdf-overlay" id="pdfOverlay">
+  <div class="pdf-toolbar">
+    <span id="pdfTitle"></span>
+    <button class="pdf-close-btn" onclick="closePdf()">✕</button>
+  </div>
+  <iframe class="pdf-frame" id="pdfFrame" src=""></iframe>
+</div>
+
+<div id="toast"></div>
+
 <script>
-  const dropzone  = document.getElementById('dropzone');
-  const fileInput = document.getElementById('fileInput');
-  const feedback  = document.getElementById('feedback');
+  // ── Прогресс ────────────────────────────────────────────────────────────────
+  function updateProgress() {
+    const cards = document.querySelectorAll('.pos-card');
+    let total = 0, done = 0;
+    cards.forEach(c => {
+      const q = parseFloat(c.dataset.qty) || 0;
+      const d = parseFloat(c.dataset.done) || 0;
+      total += q; done += Math.min(d, q);
+    });
+    const pct = total > 0 ? Math.round(done / total * 100) : 0;
+    document.getElementById('globalBar').style.width = pct + '%';
+    document.getElementById('globalPct').textContent = pct + '%';
+  }
 
-  dropzone.addEventListener('click', () => fileInput.click());
-  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.style.borderColor='#1d6fc4'; });
-  dropzone.addEventListener('dragleave', () => dropzone.style.borderColor='');
-  dropzone.addEventListener('drop', e => {
-    e.preventDefault(); dropzone.style.borderColor='';
-    if (e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files);
+  // ── Отметка +1 ────────────────────────────────────────────────────────────
+  function markOne(posId) { sendMark(posId, 1); }
+
+  // ── Модалка ────────────────────────────────────────────────────────────────
+  let activePos = null;
+
+  function openModal(posId, name, planQty, doneQty) {
+    activePos = posId;
+    const rem = Math.max(1, Math.round(planQty - doneQty));
+    document.getElementById('modalName').textContent = name;
+    document.getElementById('qtyInput').value = rem;
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    activePos = null;
+  }
+  function confirmModal() {
+    if (!activePos) return;
+    const v = parseInt(document.getElementById('qtyInput').value) || 1;
+    sendMark(activePos, v);
+    closeModal();
+  }
+  document.getElementById('modalOverlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
   });
-  fileInput.addEventListener('change', () => { if (fileInput.files.length) uploadFiles(fileInput.files); });
 
-  function uploadFiles(files) {
-    const arr = [...files];
-    const xl  = arr.filter(f => f.name.match(/\.xlsx?$/i)).length;
-    const img = arr.filter(f => f.name.match(/\.(jpg|jpeg|png)$/i)).length;
-    const pdf = arr.filter(f => f.name.match(/\.pdf$/i)).length;
-    showFeedback('loading', `Загружаем: ${xl} спека, ${img} картинок, ${pdf} PDF...`);
+  // Кнопки +/− с долгим нажатием
+  function setupLongPress(btn, delta) {
+    let timer = null, interval = null;
+    const input = document.getElementById('qtyInput');
+    const step = () => {
+      let v = parseInt(input.value) || 1;
+      v = Math.max(1, v + delta);
+      input.value = v;
+    };
+    const start = () => {
+      step();
+      timer = setTimeout(() => { interval = setInterval(step, 80); }, 400);
+    };
+    const stop = () => {
+      clearTimeout(timer); clearInterval(interval);
+      timer = null; interval = null;
+    };
+    btn.addEventListener('mousedown',  start);
+    btn.addEventListener('touchstart', e => { e.preventDefault(); start(); }, { passive:false });
+    btn.addEventListener('mouseup',   stop);
+    btn.addEventListener('mouseleave', stop);
+    btn.addEventListener('touchend',  stop);
+    btn.addEventListener('touchcancel', stop);
+  }
+  setupLongPress(document.getElementById('btnMinus'), -1);
+  setupLongPress(document.getElementById('btnPlus'),  +1);
 
-    const fd = new FormData();
-    arr.forEach(f => fd.append('files', f));
-
-    fetch('/upload', { method:'POST', body:fd })
-      .then(r => r.json())
-      .then(d => {
-        if (d.ok) {
-          showFeedback('success', `✓ ${d.order_number} — ${d.positions_count} поз., ${d.images_saved} фото, ${d.pdfs_saved} PDF`);
-          setTimeout(() => location.reload(), 1400);
-        } else {
-          showFeedback('error', `✗ ${d.error}`);
-        }
-      })
-      .catch(() => showFeedback('error', '✗ Ошибка сети'));
+  // ── Отправка ────────────────────────────────────────────────────────────────
+  function sendMark(posId, qty) {
+    fetch(`/mark/${posId}`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ qty_done: qty })
+    })
+    .then(r => r.json())
+    .then(d => {
+      if (d.ok) { updateCard(posId, d.total_done, d.qty, d.complete); showToast(`+${qty} шт`, 'ok'); }
+      else showToast(d.error, 'err');
+    })
+    .catch(() => showToast('Ошибка сети', 'err'));
   }
 
-  function showFeedback(type, text) {
-    feedback.className = `pm-feedback ${type}`;
-    feedback.textContent = text;
-    feedback.style.display = 'block';
+  function updateCard(posId, done, qty, complete) {
+    const card = document.getElementById(`card-${posId}`);
+    if (!card) return;
+    card.dataset.done = done;
+    const pct = qty > 0 ? Math.min(Math.round(done / qty * 100), 100) : 0;
+    document.getElementById(`fill-${posId}`).style.width = pct + '%';
+    document.getElementById(`label-${posId}`).textContent = `${Math.round(done)}/${Math.round(qty)} шт`;
+    if (complete) {
+      card.classList.add('done');
+      card.querySelector('.pos-actions').innerHTML = '<button class="btn-mark done-btn" disabled>✓ Готово</button>';
+    }
+    updateProgress();
   }
 
-  function deleteOrder(id, name) {
-    if (!confirm(`Удалить заказ ${name}?`)) return;
-    fetch(`/delete/${id}`, { method:'POST' }).then(() => location.reload());
+  // ── PDF viewer ────────────────────────────────────────────────────────────
+  function openPdf(url, title) {
+    document.getElementById('pdfTitle').textContent = title;
+    document.getElementById('pdfFrame').src = url;
+    document.getElementById('pdfOverlay').classList.add('open');
   }
+  function closePdf() {
+    document.getElementById('pdfOverlay').classList.remove('open');
+    document.getElementById('pdfFrame').src = '';
+  }
+
+  // ── Тост ────────────────────────────────────────────────────────────────
+  function showToast(text, type='ok') {
+    const t = document.getElementById('toast');
+    t.textContent = text; t.className = `show ${type}`;
+    setTimeout(() => t.className = '', 2200);
+  }
+
+  updateProgress();
 </script>
 </body>
 </html>
