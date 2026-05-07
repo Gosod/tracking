@@ -113,8 +113,9 @@ def order_view(order_id):
 
 @app.route("/upload", methods=["POST"])
 def upload():
+    app.logger.warning(f"form keys: {list(request.files.keys())}")
     files = request.files.getlist("files")
-    if not files:
+    if not files or all(f.filename == '' for f in files):
         return jsonify({"error": "No files selected"}), 400
 
     excel_file = None
